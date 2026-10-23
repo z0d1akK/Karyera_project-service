@@ -1,0 +1,65 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 009-create-task-relations
+      author: zodiakk
+
+      changes:
+        - createTable:
+            tableName: task_relations
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: source_task_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_task_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: relation_type
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: task_relations
+            baseColumnNames: source_task_id
+            referencedTableName: project_tasks
+            referencedColumnNames: id
+            constraintName: fk_task_relation_source
+
+        - addForeignKeyConstraint:
+            baseTableName: task_relations
+            baseColumnNames: target_task_id
+            referencedTableName: project_tasks
+            referencedColumnNames: id
+            constraintName: fk_task_relation_target
+
+        - addUniqueConstraint:
+            tableName: task_relations
+            columnNames: source_task_id, target_task_id, relation_type
+            constraintName: uq_task_relation
+
+        - sql:
+            dbms: postgresql
+            sql: |
+              ALTER TABLE task_relations ADD CONSTRAINT chk_task_relation_not_self CHECK (source_task_id <> target_task_id);

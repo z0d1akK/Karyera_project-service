@@ -1,0 +1,136 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 007-create-project-tasks
+      author: zodiakk
+
+      changes:
+        - createTable:
+            tableName: project_tasks
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: project_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: task_number
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: task_type_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: column_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: parent_task_id
+                  type: UUID
+              - column:
+                  name: priority
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: complexity
+                  type: VARCHAR(20)
+              - column:
+                  name: story_points
+                  type: NUMERIC(5,2)
+              - column:
+                  name: estimated_minutes
+                  type: INTEGER
+              - column:
+                  name: due_date
+                  type: DATE
+              - column:
+                  name: completed_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: board_position
+                  type: NUMERIC(30,15)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reporter_employee_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: archived_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: version
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: project_tasks
+            baseColumnNames: project_id
+            referencedTableName: projects
+            referencedColumnNames: id
+            constraintName: fk_project_task_project
+
+        - addForeignKeyConstraint:
+            baseTableName: project_tasks
+            baseColumnNames: task_type_id
+            referencedTableName: task_types
+            referencedColumnNames: id
+            constraintName: fk_project_task_type
+
+        - addForeignKeyConstraint:
+            baseTableName: project_tasks
+            baseColumnNames: column_id
+            referencedTableName: board_columns
+            referencedColumnNames: id
+            constraintName: fk_project_task_column
+
+        - addForeignKeyConstraint:
+            baseTableName: project_tasks
+            baseColumnNames: parent_task_id
+            referencedTableName: project_tasks
+            referencedColumnNames: id
+            constraintName: fk_project_task_parent
+
+        - addUniqueConstraint:
+            tableName: project_tasks
+            columnNames: project_id, task_number
+            constraintName: uq_project_task_number
+
+        - sql:
+            dbms: postgresql
+            sql: |
+              ALTER TABLE project_tasks ADD CONSTRAINT chk_project_task_story_points CHECK (story_points IS NULL OR story_points >= 0);
+              ALTER TABLE project_tasks ADD CONSTRAINT chk_project_task_estimated_minutes CHECK (estimated_minutes IS NULL OR estimated_minutes >= 0);
+              ALTER TABLE project_tasks ADD CONSTRAINT chk_project_task_board_position CHECK (board_position >= 0);
+              ALTER TABLE project_tasks ADD CONSTRAINT chk_project_task_parent_not_self CHECK (parent_task_id IS NULL OR parent_task_id <> id);

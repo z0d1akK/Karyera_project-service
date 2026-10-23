@@ -1,0 +1,46 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 011-create-task-activities
+      author: zodiakk
+
+      changes:
+        - createTable:
+            tableName: task_activities
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: task_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: actor_employee_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: action
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: changes
+                  type: JSONB
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: task_activities
+            baseColumnNames: task_id
+            referencedTableName: project_tasks
+            referencedColumnNames: id
+            constraintName: fk_task_activity_task

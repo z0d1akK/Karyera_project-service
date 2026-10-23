@@ -1,0 +1,77 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 003-create-project-assignments
+      author: zodiakk
+
+      changes:
+        - createTable:
+            tableName: project_assignments
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: project_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: employee_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: project_role_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_date
+                  type: DATE
+              - column:
+                  name: allocation_percent
+                  type: NUMERIC(5,2)
+              - column:
+                  name: version
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: project_assignments
+            baseColumnNames: project_id
+            referencedTableName: projects
+            referencedColumnNames: id
+            constraintName: fk_project_assignment_project
+
+        - addForeignKeyConstraint:
+            baseTableName: project_assignments
+            baseColumnNames: project_role_id
+            referencedTableName: project_roles
+            referencedColumnNames: id
+            constraintName: fk_project_assignment_role
+
+        - sql:
+            dbms: postgresql
+            sql: |
+              ALTER TABLE project_assignments ADD CONSTRAINT chk_project_assignment_allocation CHECK (allocation_percent IS NULL OR (allocation_percent >= 0 AND allocation_percent <= 100));
+              ALTER TABLE project_assignments ADD CONSTRAINT chk_project_assignment_dates CHECK (end_date IS NULL OR end_date >= start_date);

@@ -1,0 +1,48 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 008-create-task-assignees
+      author: zodiakk
+
+      changes:
+        - createTable:
+            tableName: task_assignees
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: task_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: assignment_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: assigned_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: unassigned_at
+                  type: TIMESTAMP WITH TIME ZONE
+
+        - addForeignKeyConstraint:
+            baseTableName: task_assignees
+            baseColumnNames: task_id
+            referencedTableName: project_tasks
+            referencedColumnNames: id
+            constraintName: fk_task_assignee_task
+
+        - addForeignKeyConstraint:
+            baseTableName: task_assignees
+            baseColumnNames: assignment_id
+            referencedTableName: project_assignments
+            referencedColumnNames: id
+            constraintName: fk_task_assignee_assignment

@@ -1,0 +1,52 @@
+databaseChangeLog:
+
+  - include:
+      file: db/changelog/tables/001-create-projects.yaml
+
+  - include:
+      file: db/changelog/tables/002-create-project-roles.yaml
+
+  - include:
+      file: db/changelog/tables/003-create-project-assignments.yaml
+
+  - include:
+      file: db/changelog/tables/004-create-project-boards.yaml
+
+  - include:
+      file: db/changelog/tables/005-create-board-columns.yaml
+
+  - include:
+      file: db/changelog/tables/006-create-task-types.yaml
+
+  - include:
+      file: db/changelog/tables/007-create-project-tasks.yaml
+
+  - include:
+      file: db/changelog/tables/008-create-task-assignees.yaml
+
+  - include:
+      file: db/changelog/tables/009-create-task-relations.yaml
+
+  - include:
+      file: db/changelog/tables/010-create-task-comments.yaml
+
+  - include:
+      file: db/changelog/tables/011-create-task-activities.yaml
+
+  - include:
+      file: db/changelog/tables/012-create-task-skills.yaml
+
+  - include:
+      file: db/changelog/tables/013-create-project-links.yaml
+
+  - include:
+      file: db/changelog/tables/014-create-project-milestones.yaml
+
+  - include:
+      file: db/changelog/tables/015-create-outbox-events.yaml
+
+  - include:
+      file: db/changelog/tables/016-create-processed-events.yaml
+
+  - include:
+      file: db/changelog/tables/017-create-indexes.yaml

@@ -1,0 +1,68 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 005-create-board-columns
+      author: zodiakk
+
+      changes:
+        - createTable:
+            tableName: board_columns
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: board_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: position
+                  type: INTEGER
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_initial
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_terminal
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: board_columns
+            baseColumnNames: board_id
+            referencedTableName: project_boards
+            referencedColumnNames: id
+            constraintName: fk_board_column_board
+
+        - addUniqueConstraint:
+            tableName: board_columns
+            columnNames: board_id, code
+            constraintName: uq_board_column_code
+
+        - addUniqueConstraint:
+            tableName: board_columns
+            columnNames: board_id, position
+            constraintName: uq_board_column_position
+
+        - sql:
+            dbms: postgresql
+            sql: |
+              ALTER TABLE board_columns ADD CONSTRAINT chk_board_column_position CHECK (position >= 0);

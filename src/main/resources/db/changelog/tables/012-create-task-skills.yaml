@@ -1,0 +1,43 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 012-create-task-skills
+      author: zodiakk
+
+      changes:
+        - createTable:
+            tableName: task_skills
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: task_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: skill_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: task_skills
+            baseColumnNames: task_id
+            referencedTableName: project_tasks
+            referencedColumnNames: id
+            constraintName: fk_task_skill_task
+
+        - addUniqueConstraint:
+            tableName: task_skills
+            columnNames: task_id, skill_id
+            constraintName: uq_task_skill

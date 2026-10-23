@@ -1,0 +1,26 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 017-create-indexes
+      author: zodiakk
+
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              CREATE EXTENSION IF NOT EXISTS pg_trgm;
+              CREATE INDEX idx_project_status ON projects (status);
+              CREATE INDEX idx_assignment_employee_dates ON project_assignments (employee_id, start_date, end_date);
+              CREATE INDEX idx_assignment_project ON project_assignments (project_id);
+              CREATE INDEX idx_task_project_column_position ON project_tasks (project_id, column_id, board_position);
+              CREATE INDEX idx_task_parent ON project_tasks (parent_task_id);
+              CREATE INDEX idx_task_type ON project_tasks (task_type_id);
+              CREATE INDEX idx_task_due_date ON project_tasks (due_date);
+              CREATE INDEX idx_task_relation_source ON task_relations (source_task_id);
+              CREATE INDEX idx_task_relation_target ON task_relations (target_task_id);
+              CREATE INDEX idx_task_assignee_assignment ON task_assignees (assignment_id);
+              CREATE UNIQUE INDEX uq_task_assignee_active ON task_assignees (task_id, assignment_id) WHERE unassigned_at IS NULL;
+              CREATE INDEX idx_task_title_trgm ON project_tasks USING gin (title gin_trgm_ops);
+              CREATE INDEX idx_task_open_project ON project_tasks (project_id) WHERE archived_at IS NULL;
+              CREATE INDEX idx_project_link_project ON project_links (project_id);
+              CREATE INDEX idx_project_milestone_project ON project_milestones (project_id, due_date);
