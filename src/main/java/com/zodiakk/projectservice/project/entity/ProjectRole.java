@@ -1,6 +1,7 @@
 package com.zodiakk.projectservice.project.entity;
 
 import com.zodiakk.projectservice.common.entity.IdentifiedEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;

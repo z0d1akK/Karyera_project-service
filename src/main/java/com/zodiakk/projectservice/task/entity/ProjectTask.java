@@ -3,19 +3,21 @@ package com.zodiakk.projectservice.task.entity;
 import com.zodiakk.projectservice.common.entity.VersionedEntity;
 import com.zodiakk.projectservice.common.enums.TaskComplexity;
 import com.zodiakk.projectservice.common.enums.TaskPriority;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.UUID;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Getter
 @Setter
