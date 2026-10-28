@@ -1,0 +1,104 @@
+package com.zodiakk.projectservice.outbox.publisher;
+
+import com.zodiakk.projectservice.outbox.config.OutboxProperties;
+import com.zodiakk.projectservice.outbox.entity.OutboxEvent;
+import com.zodiakk.projectservice.outbox.service.OutboxClaimService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import java.util.concurrent.TimeUnit;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class OutboxPublisher {
+
+    private final OutboxClaimService claimService;
+
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
+    private final OutboxProperties properties;
+
+    @Value("${app.kafka.topics.project-events}")
+    private String projectEventsTopic;
+
+    @Scheduled(fixedDelayString = "${app.outbox.poll-delay-ms}")
+    public void publishPendingEvents() {
+        var events = claimService.claimBatch();
+
+        for (OutboxEvent event : events) {
+            publish(event);
+        }
+    }
+
+    private void publish(OutboxEvent event) {
+        try {
+            kafkaTemplate.send(
+                    projectEventsTopic,
+                    event.getAggregateId().toString(),
+                    event.getPayload()
+            ).orTimeout(
+                    properties.sendTimeoutSeconds(),
+                    TimeUnit.SECONDS
+            ).whenComplete((result, ex) -> complete(event, ex));
+        } catch (RuntimeException ex) {
+            complete(event, ex);
+        }
+    }
+
+    private void complete(OutboxEvent event, Throwable ex) {
+        if (ex != null) {
+            log.error(
+                    "Failed to publish outbox event: id={}, attempt={}",
+                    event.getId(),
+                    event.getAttempts(),
+                    ex
+            );
+
+            try {
+                claimService.markFailed(
+                        event.getId(),
+                        event.getAttempts()
+                );
+            } catch (RuntimeException markException) {
+                log.error(
+                        "Failed to mark outbox event as failed: id={}",
+                        event.getId(),
+                        markException
+                );
+            }
+
+            return;
+        }
+
+        try {
+            boolean updated = claimService.markPublished(
+                    event.getId(),
+                    event.getAttempts()
+            );
+
+            if (!updated) {
+                log.warn(
+                        "Outbox event {} was published but its claim expired",
+                        event.getId()
+                );
+            } else {
+                log.info(
+                        "Published outbox event: id={}, type={}",
+                        event.getId(),
+                        event.getEventType()
+                );
+            }
+        } catch (RuntimeException markException) {
+            log.error(
+                    "Failed to mark outbox event as published: id={}",
+                    event.getId(),
+                    markException
+            );
+        }
+    }
+}
