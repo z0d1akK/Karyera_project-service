@@ -28,15 +28,20 @@ public class ProjectTaskPageableFactory {
     );
 
     public static Pageable create(PageRequestDto pageRequest) {
-        String sortField = ALLOWED_SORT_FIELDS.getOrDefault(
-                pageRequest.getSortBy(),
-                "boardPosition"
-        );
+        String sortField = sortField(pageRequest.getSortBy(), "boardPosition");
 
         Sort.Direction direction = pageRequest.getSortDirection() == SortDirection.DESC
                 ? Sort.Direction.DESC
                 : Sort.Direction.ASC;
 
         return PageRequest.of(pageRequest.getPage(), pageRequest.getSize(), Sort.by(direction, sortField));
+    }
+
+    private static String sortField(String requested, String fallback) {
+        if (requested == null) {
+            return fallback;
+        }
+
+        return ALLOWED_SORT_FIELDS.getOrDefault(requested, fallback);
     }
 }
