@@ -1,6 +1,8 @@
 package com.zodiakk.projectservice.internal.controller;
 
 import com.zodiakk.projectservice.internal.dto.ProjectHistoryResponseDto;
+import com.zodiakk.projectservice.internal.dto.MemberEligibilityResponseDto;
+import com.zodiakk.projectservice.internal.dto.TaskCompletionEvidenceResponseDto;
 import com.zodiakk.projectservice.internal.dto.TaskStatisticsResponseDto;
 import com.zodiakk.projectservice.internal.dto.WorkEligibilityResponseDto;
 import com.zodiakk.projectservice.internal.service.InternalProjectService;
@@ -71,8 +73,30 @@ public class InternalProjectController {
             @Parameter(description = "Period end date")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodEnd
     ) {
-        return ResponseEntity.ok(
-                internalProjectService.getTaskStatistics(employeeId, periodStart, periodEnd)
-        );
+        return ResponseEntity.ok(internalProjectService.getTaskStatistics(employeeId, periodStart, periodEnd));
+    }
+
+    @GetMapping("/projects/{projectId}/members/{employeeId}/eligibility")
+    @Operation(summary = "Check project member eligibility",
+            description = "Returns project membership facts for career development validation")
+    @ApiResponse(responseCode = "200", description = "Membership eligibility resolved",
+            content = @Content(schema = @Schema(implementation = MemberEligibilityResponseDto.class)))
+    public ResponseEntity<MemberEligibilityResponseDto> getMemberEligibility(
+            @Parameter(description = "Project identifier", required = true) @PathVariable UUID projectId,
+            @Parameter(description = "Employee identifier", required = true) @PathVariable UUID employeeId
+    ) {
+        return ResponseEntity.ok(internalProjectService.getMemberEligibility(projectId, employeeId));
+    }
+
+    @GetMapping("/tasks/{taskId}/completion-evidence")
+    @Operation(summary = "Get task completion evidence",
+            description = "Returns task completion facts and whether the employee has a verifiable link to the task")
+    @ApiResponse(responseCode = "200", description = "Task completion evidence resolved",
+            content = @Content(schema = @Schema(implementation = TaskCompletionEvidenceResponseDto.class)))
+    public ResponseEntity<TaskCompletionEvidenceResponseDto> getTaskCompletionEvidence(
+            @Parameter(description = "Task identifier", required = true) @PathVariable UUID taskId,
+            @Parameter(description = "Employee identifier", required = true) @RequestParam UUID employeeId
+    ) {
+        return ResponseEntity.ok(internalProjectService.getTaskCompletionEvidence(taskId, employeeId));
     }
 }

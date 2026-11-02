@@ -1,6 +1,8 @@
 package com.zodiakk.projectservice.internal.service;
 
+import com.zodiakk.projectservice.internal.dto.MemberEligibilityResponseDto;
 import com.zodiakk.projectservice.internal.dto.ProjectHistoryResponseDto;
+import com.zodiakk.projectservice.internal.dto.TaskCompletionEvidenceResponseDto;
 import com.zodiakk.projectservice.internal.dto.TaskStatisticsResponseDto;
 import com.zodiakk.projectservice.internal.dto.WorkEligibilityResponseDto;
 
@@ -23,4 +25,8 @@ public interface InternalProjectService {
             LocalDate periodStart,
             LocalDate periodEnd
     );
+
+    MemberEligibilityResponseDto getMemberEligibility(UUID projectId, UUID employeeId);
+
+    TaskCompletionEvidenceResponseDto getTaskCompletionEvidence(UUID taskId, UUID employeeId);
 }

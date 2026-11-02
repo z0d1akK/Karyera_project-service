@@ -1,8 +1,10 @@
 package com.zodiakk.projectservice.internal.service.impl;
 
 import com.zodiakk.projectservice.common.enums.ProjectStatus;
+import com.zodiakk.projectservice.internal.dto.MemberEligibilityResponseDto;
 import com.zodiakk.projectservice.internal.dto.ProjectHistoryEntryDto;
 import com.zodiakk.projectservice.internal.dto.ProjectHistoryResponseDto;
+import com.zodiakk.projectservice.internal.dto.TaskCompletionEvidenceResponseDto;
 import com.zodiakk.projectservice.internal.dto.TaskStatisticsResponseDto;
 import com.zodiakk.projectservice.internal.dto.WorkEligibilityReasonCode;
 import com.zodiakk.projectservice.internal.dto.WorkEligibilityResponseDto;
@@ -14,8 +16,10 @@ import com.zodiakk.projectservice.project.repository.ProjectAssignmentRepository
 import com.zodiakk.projectservice.project.repository.ProjectRepository;
 import com.zodiakk.projectservice.project.repository.ProjectRoleRepository;
 import com.zodiakk.projectservice.task.entity.ProjectTask;
+import com.zodiakk.projectservice.task.entity.TaskAssignee;
 import com.zodiakk.projectservice.task.entity.TaskType;
 import com.zodiakk.projectservice.task.repository.ProjectTaskRepository;
+import com.zodiakk.projectservice.task.repository.TaskAssigneeRepository;
 import com.zodiakk.projectservice.task.repository.TaskTypeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -50,6 +55,8 @@ public class InternalProjectServiceImpl implements InternalProjectService {
     private final ProjectTaskRepository projectTaskRepository;
 
     private final TaskTypeRepository taskTypeRepository;
+
+    private final TaskAssigneeRepository taskAssigneeRepository;
 
     @Override
     public WorkEligibilityResponseDto getWorkEligibility(
@@ -283,6 +290,114 @@ public class InternalProjectServiceImpl implements InternalProjectService {
                 new LinkedHashMap<>(completedByType),
                 new LinkedHashMap<>(completedByComplexity),
                 projectIds.size()
+        );
+    }
+
+    @Override
+    public MemberEligibilityResponseDto getMemberEligibility(UUID projectId, UUID employeeId) {
+        Project project = projectRepository.findById(projectId).orElse(null);
+
+        if (project == null) {
+            return new MemberEligibilityResponseDto(
+                    projectId,
+                    employeeId,
+                    false,
+                    false,
+                    false,
+                    null,
+                    null,
+                    null,
+                    "PROJECT_NOT_FOUND"
+            );
+        }
+
+        List<ProjectAssignment> assignments = projectAssignmentRepository.findAllByEmployeeId(employeeId)
+                .stream()
+                .filter(assignment -> projectId.equals(assignment.getProjectId()))
+                .sorted(Comparator.comparing(
+                        ProjectAssignment::getStartDate,
+                        Comparator.nullsLast(Comparator.reverseOrder())
+                ))
+                .toList();
+
+        boolean projectActive = project.getStatus() == ProjectStatus.ACTIVE;
+
+        if (assignments.isEmpty()) {
+            return new MemberEligibilityResponseDto(
+                    projectId,
+                    employeeId,
+                    false,
+                    projectActive,
+                    false,
+                    null,
+                    null,
+                    null,
+                    "NO_PROJECT_ASSIGNMENT"
+            );
+        }
+
+        LocalDate today = LocalDate.now();
+
+        ProjectAssignment current = assignments.stream()
+                .filter(assignment -> isActiveOnDate(assignment, today))
+                .findFirst()
+                .orElse(assignments.get(0));
+
+        boolean assignmentActive = isActiveOnDate(current, today);
+
+        String reason = null;
+
+        if (!projectActive) {
+            reason = "PROJECT_NOT_ACTIVE";
+        } else if (!assignmentActive) {
+            reason = "ASSIGNMENT_NOT_ACTIVE";
+        }
+
+        return new MemberEligibilityResponseDto(
+                projectId,
+                employeeId,
+                reason == null,
+                projectActive,
+                assignmentActive,
+                current.getId(),
+                current.getStartDate(),
+                current.getEndDate(),
+                reason
+        );
+    }
+
+    private boolean isActiveOnDate(ProjectAssignment assignment, LocalDate date) {
+        boolean started = assignment.getStartDate() == null || !assignment.getStartDate().isAfter(date);
+        boolean notEnded = assignment.getEndDate() == null || !assignment.getEndDate().isBefore(date);
+
+        return started && notEnded;
+    }
+
+    @Override
+    public TaskCompletionEvidenceResponseDto getTaskCompletionEvidence(UUID taskId, UUID employeeId) {
+        ProjectTask task = projectTaskRepository.findById(taskId).orElse(null);
+
+        if (task == null) {
+            return new TaskCompletionEvidenceResponseDto(taskId, employeeId, false, false, null);
+        }
+
+        Set<UUID> assignmentIds = taskAssigneeRepository
+                .findAllByTaskIdAndUnassignedAtIsNull(taskId)
+                .stream()
+                .map(TaskAssignee::getAssignmentId)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        boolean participated = !assignmentIds.isEmpty()
+                && projectAssignmentRepository.findAllById(assignmentIds)
+                .stream()
+                .anyMatch(assignment -> employeeId.equals(assignment.getEmployeeId()));
+
+        return new TaskCompletionEvidenceResponseDto(
+                taskId,
+                employeeId,
+                task.getCompletedAt() != null,
+                participated,
+                task.getCompletedAt()
         );
     }
 
