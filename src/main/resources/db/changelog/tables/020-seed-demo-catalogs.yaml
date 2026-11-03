@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 020-seed-demo-catalogs
+      author: zodiakk
+      comment: Demo project roles and task types
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM project_roles WHERE id = '9a1b0c2d-3e4f-4a5b-8c7d-000000000501'
+      changes:
+        - sql:
+            dbms: postgresql
+            splitStatements: true
+            sql: |
+              INSERT INTO project_roles (id, code, name, description, active) VALUES
+              ('9a1b0c2d-3e4f-4a5b-8c7d-000000000501', 'DEV', 'Разработчик', 'Реализация задач', TRUE),
+              ('9a1b0c2d-3e4f-4a5b-8c7d-000000000502', 'QA', 'Тестировщик', 'Проверка качества', TRUE),
+              ('9a1b0c2d-3e4f-4a5b-8c7d-000000000503', 'PM', 'Руководитель проекта', 'Планирование и координация', TRUE),
+              ('9a1b0c2d-3e4f-4a5b-8c7d-000000000504', 'ANALYST', 'Аналитик', 'Требования и постановка', TRUE);
+
+              INSERT INTO task_types (id, code, name, description, active) VALUES
+              ('9a1b0c2d-3e4f-4a5b-8c7d-000000000601', 'FEATURE', 'Функциональность', 'Новая возможность продукта', TRUE),
+              ('9a1b0c2d-3e4f-4a5b-8c7d-000000000602', 'BUG', 'Дефект', 'Исправление ошибки', TRUE),
+              ('9a1b0c2d-3e4f-4a5b-8c7d-000000000603', 'TASK', 'Задача', 'Обычная рабочая задача', TRUE),
+              ('9a1b0c2d-3e4f-4a5b-8c7d-000000000604', 'REVIEW', 'Ревью', 'Проверка результата', TRUE);
